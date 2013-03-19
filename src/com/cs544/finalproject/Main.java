@@ -33,12 +33,14 @@ public class Main {
 				if (pe.hasContent()) {
 					html = ProtoStreamUtils.contentToString(pe.getContent());
 					text = getTextFromHTML(html);
+					text = text.replaceAll("\\<.*?\\>", ""); 
+					if(!text.equals("")) {
+						GeneralUtils.writeToFile(text, PATH_PLAIN_TEXT_FOLDER + "/" + i + ".txt");
+					}
 					System.out.println(text);
 				}
 				
-				if(!text.equals("")) {
-					GeneralUtils.writeToFile(text, PATH_PLAIN_TEXT_FOLDER + "/" + i + ".txt");
-				}
+				
 
 				// if there is any content where the chrome/boilerplate stuff has been removed, then extract and print it					
 //					if (pe.hasContentExtract())
