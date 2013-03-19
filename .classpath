@@ -16,6 +16,6 @@
 	<classpathentry kind="lib" path="lib/tar.jar"/>
 	<classpathentry kind="lib" path="lib/xmlunit-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/jsoup-1.6.2.jar"/>
-	<classpathentry kind="lib" path="lib/jdom-2.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/xom-1.2.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
