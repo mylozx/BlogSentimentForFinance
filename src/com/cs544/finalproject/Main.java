@@ -26,6 +26,15 @@ public class Main {
 	
 	public static void main(String args[]) {
 		String file = "995.protostream";
+		convertForFile(file, PATH_XML_FILES_FOLDER);
+	}
+	
+	
+	/**
+	 * convert from HTML to XML for a given file
+	 * @param file
+	 */
+	private static void convertForFile(String file, String pathXMLFileFolder) {
 		try {
 			List<Entry> entries = ProtoStreamUtils.read(file);
 			int titleCnt = 0;
@@ -34,47 +43,34 @@ public class Main {
 			
 			fileCnt = getFileCount(file);
 			
-			// convert from HTML to XML for each blog in protostream file
+			// convert from HTML to XML for each blog post in protostream file
 			for(int i = 0; i < entries.size(); ++i) {
 				Entry entry = entries.get(i);
 				PermalinkEntry pe = entry.getPermalinkEntry();
-				String text = "", html = "", title = "";
-				// print the title of the entry
-				if (pe.hasTitle()) {
-					title = pe.getTitle();
-					System.out.println(titleCnt + " Title: " + title);	// output title to console to keep track
-					++titleCnt;
-				}
 
 				// if there is content then extract and print it
 				// Note: the content includes the full html
 				if (pe.hasContent()) {
-					html = ProtoStreamUtils.contentToString(pe.getContent());
-					text = getTextFromHTML(html);
-					text = text.replaceAll("\\<.*?\\>", ""); 	// eliminate HTML tags
-					
+					String title = getTitle(pe);
 					String authors = getAuthors(pe);
+					String html = ProtoStreamUtils.contentToString(pe.getContent());
+					String text = getTextFromHTML(html);
 					
 					if(!text.equals("")) {
 						// write separate files (blog posts) to plain text
-						GeneralUtils.writeToFile(text, PATH_PLAIN_TEXT_FOLDER + "/" + i + ".txt");
+//						GeneralUtils.writeToFile(text, PATH_PLAIN_TEXT_FOLDER + "/" + i + ".txt");
 						
-						title = cleanXML(title);
-						authors = cleanXML(authors);
-						text = cleanXML(text);
 						String xml = getXMLString(title, authors, text);
 						currentXMLString += xml;
 					}
-//					System.out.println(text);
 				}
 
 				// if there is any content where the chrome/boilerplate stuff has been removed, then extract and print it					
 //					if (pe.hasContentExtract())
 //						System.out.println(ProtoStreamUtils.contentToStringWithoutHTML(pe.getContentExtract()));
 			}
-			
 			currentXMLString = "<root>" + currentXMLString + "</root>";
-			GeneralUtils.writeToFile(currentXMLString, PATH_XML_FILES_FOLDER + "/" + fileCnt + ".xml");
+			GeneralUtils.writeToFile(currentXMLString, pathXMLFileFolder + "/" + fileCnt + ".xml");
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -82,9 +78,27 @@ public class Main {
 		}
 	}
 	
+	/**
+	 * get title from a blog post entry
+	 * @param pe
+	 * @return
+	 */
+	private static String getTitle(PermalinkEntry pe) {
+		// print the title of the entry
+		String title = "";
+		if (pe.hasTitle()) {
+			title = pe.getTitle();
+			title = cleanXML(title);
+			System.out.println(" Title: " + title);	// output title to console to keep track
+		} 
+		return title;
+	}
+
 	
 	/**
 	 * get author names given pe
+	 * @param pe
+	 * @return
 	 */
 	private static String getAuthors(PermalinkEntry pe) {
 		String authors = "";
@@ -99,11 +113,15 @@ public class Main {
 				authors += author.getName() + ";";
 			}
 		}
+		authors = cleanXML(authors);
+		
 		return authors;
 	}
 	
 	/**
 	 * get count of protostream file given filename
+	 * @param fileName
+	 * @return
 	 */
 	private static int getFileCount(String fileName) {
 		String s = fileName.substring(0, fileName.indexOf(".protostream"));
@@ -212,6 +230,11 @@ public class Main {
 	 * @return
 	 */
 	private static String getTextFromHTML(String html) {
-		return Jsoup.parse(html).text();
+		String text = Jsoup.parse(html).text();
+		text = text.replaceAll("\\<.*?\\>", ""); 	// eliminate HTML tags
+		text = cleanXML(text);
+		
+		return text;
+				
 	}
 }
