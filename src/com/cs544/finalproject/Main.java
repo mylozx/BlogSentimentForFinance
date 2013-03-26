@@ -14,6 +14,7 @@ import nu.xom.Element;
 
 import org.jsoup.Jsoup;
 
+import com.spinn3r.api.protobuf.ContentApi.Author;
 import com.spinn3r.api.protobuf.ContentApi.Entry;
 import com.spinn3r.api.protobuf.ContentApi.PermalinkEntry;
 
@@ -27,7 +28,13 @@ public class Main {
 		String file = "995.protostream";
 		try {
 			List<Entry> entries = ProtoStreamUtils.read(file);
+			int titleCnt = 0;
+			int fileCnt = 0;
+			String currentXMLString = "";
 			
+			fileCnt = getFileCount(file);
+			
+			// convert from HTML to XML for each blog in protostream file
 			for(int i = 0; i < entries.size(); ++i) {
 				Entry entry = entries.get(i);
 				PermalinkEntry pe = entry.getPermalinkEntry();
@@ -35,38 +42,72 @@ public class Main {
 				// print the title of the entry
 				if (pe.hasTitle()) {
 					title = pe.getTitle();
-					System.out.println("Title: " + title);
+					System.out.println(titleCnt + " Title: " + title);	// output title to console to keep track
+					++titleCnt;
 				}
-				// see how many authors we have and print their names
-//					System.out.println("# of Authors: " + pe.getAuthorCount());
-//					for (Author author : pe.getAuthorList())
-//						System.out.println(author.getName());
 
 				// if there is content then extract and print it
 				// Note: the content includes the full html
 				if (pe.hasContent()) {
 					html = ProtoStreamUtils.contentToString(pe.getContent());
 					text = getTextFromHTML(html);
-					text = text.replaceAll("\\<.*?\\>", ""); 
+					text = text.replaceAll("\\<.*?\\>", ""); 	// eliminate HTML tags
+					
+					String authors = getAuthors(pe);
+					
 					if(!text.equals("")) {
+						// write separate files (blog posts) to plain text
 						GeneralUtils.writeToFile(text, PATH_PLAIN_TEXT_FOLDER + "/" + i + ".txt");
 						
 						title = cleanXML(title);
+						authors = cleanXML(authors);
 						text = cleanXML(text);
-						String xml = getXMLString(title, text);
-						GeneralUtils.writeToFile(xml, PATH_XML_FILES_FOLDER + "/" + i + ".xml");
+						String xml = getXMLString(title, authors, text);
+						currentXMLString += xml;
 					}
 //					System.out.println(text);
-				}		
+				}
 
 				// if there is any content where the chrome/boilerplate stuff has been removed, then extract and print it					
 //					if (pe.hasContentExtract())
 //						System.out.println(ProtoStreamUtils.contentToStringWithoutHTML(pe.getContentExtract()));
 			}
+			
+			currentXMLString = "<root>" + currentXMLString + "</root>";
+			GeneralUtils.writeToFile(currentXMLString, PATH_XML_FILES_FOLDER + "/" + fileCnt + ".xml");
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	
+	/**
+	 * get author names given pe
+	 */
+	private static String getAuthors(PermalinkEntry pe) {
+		String authors = "";
+		// if only 1 author, then no ";"
+		if(pe.getAuthorCount() == 1) {		// get NO. of authors
+			for (Author author : pe.getAuthorList()) {
+				authors += author.getName();
+			}
+		} else {
+			//if multiple author, separated by ";"
+			for (Author author : pe.getAuthorList()) {
+				authors += author.getName() + ";";
+			}
+		}
+		return authors;
+	}
+	
+	/**
+	 * get count of protostream file given filename
+	 */
+	private static int getFileCount(String fileName) {
+		String s = fileName.substring(0, fileName.indexOf(".protostream"));
+		return Integer.parseInt(s);
 	}
 	
 	/**
@@ -140,21 +181,28 @@ public class Main {
      * @param blogText
      * @return
      */
-	private static String getXMLString(String blogTitle, String blogText) {
-		Element root = new Element("root");
+	private static String getXMLString(String blogTitle, String blogAuthors, String blogText) {
+//		Element root = new Element("root");
 		Element entry = new Element("blog");
-		root.appendChild(entry);
+//		root.appendChild(entry);
 		
 		Element title = new Element("title");
 		title.appendChild(blogTitle);
+//		System.out.println(title.toXML());
+		
+		Element authors = new Element("authors");
+		authors.appendChild(blogAuthors);
+//		System.out.println(authors.toXML());
 		
 		Element content = new Element("content");
 		content.appendChild(blogText);
+//		System.out.println(content.toXML());
 		
 		entry.appendChild(title);
+		entry.appendChild(authors);
 		entry.appendChild(content);
 		
-		return root.toXML();
+		return entry.toXML();
 	}
 	
 	/**
