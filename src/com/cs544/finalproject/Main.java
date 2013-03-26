@@ -73,7 +73,6 @@ public class Main {
 			GeneralUtils.writeToFile(currentXMLString, pathXMLFileFolder + "/" + fileCnt + ".xml");
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -200,21 +199,16 @@ public class Main {
      * @return
      */
 	private static String getXMLString(String blogTitle, String blogAuthors, String blogText) {
-//		Element root = new Element("root");
 		Element entry = new Element("blog");
-//		root.appendChild(entry);
 		
 		Element title = new Element("title");
 		title.appendChild(blogTitle);
-//		System.out.println(title.toXML());
 		
 		Element authors = new Element("authors");
 		authors.appendChild(blogAuthors);
-//		System.out.println(authors.toXML());
 		
 		Element content = new Element("content");
 		content.appendChild(blogText);
-//		System.out.println(content.toXML());
 		
 		entry.appendChild(title);
 		entry.appendChild(authors);
